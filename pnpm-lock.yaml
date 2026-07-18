@@ -164,7 +164,7 @@ importers:
         specifier: ^3.3.3
         version: 3.9.5
       tailwindcss:
-        specifier: ^3.4.10
+        specifier: 3.4.19
         version: 3.4.19
       typescript:
         specifier: 5.5.4
