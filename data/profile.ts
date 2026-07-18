@@ -1,4 +1,11 @@
 // Place your portrait at: public/images/portrait.webp (or portrait.jpg)
+export type Testimonial = {
+  quote: string;
+  name: string;
+  title: string;
+  avatar: string;
+};
+
 export const profile = {
   name: "Abhinav Kumar",
   title: "Software Engineer (AI)",
@@ -375,7 +382,7 @@ export const profile = {
       },
     ],
   },
-  testimonials: [],
+  testimonials: [] as Testimonial[],
   community: [
     {
       role: "Student Member",
