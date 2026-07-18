@@ -1,0 +1,782 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ──────────────────────────────────────────────────────────────
+   INSTRUMENT — design tokens
+   A dark-first, monospace-accented "instrument panel" system.
+   One signal accent (teal). Light theme is a blueprint inverse.
+   Token names are kept stable so shared ui/* primitives compile.
+   ────────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: dark;
+
+  --bg-main: #0a0b0d;
+  --bg-secondary: #0e1014;
+  --bg-elevated: #14171c;
+  --surface: rgba(255, 255, 255, 0.018);
+
+  --text-primary: #e8eaed;
+  --text-secondary: #99a0aa;
+  --text-faint: #878f9c;
+  --text-on-accent: #04211d;
+
+  --border-subtle: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  /* dual signal accents: teal (primary) + violet (secondary) */
+  --accent: #2dd4bf;
+  --accent-2: #a78bfa;
+  --accent-blue: var(--accent);
+  --accent-purple: var(--accent-2);
+  --accent-pink: var(--accent-2);
+  --accent-3: #f0abfc;
+  --accent-soft: rgba(45, 212, 191, 0.12);
+  --accent-glow: rgba(45, 212, 191, 0.22);
+  --accent-2-soft: rgba(167, 139, 250, 0.14);
+  --accent-2-glow: rgba(167, 139, 250, 0.26);
+  --gradient: linear-gradient(110deg, var(--accent) 0%, var(--accent-2) 70%, #f0abfc 100%);
+
+  --grid: rgba(255, 255, 255, 0.028);
+  --cursor-glow: var(--accent-glow);
+
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-blur: 10px;
+  --glass-sheen: rgba(255, 255, 255, 0.06);
+  --panel-bg: rgba(18, 22, 28, 0.55);
+  --panel-quiet-bg: rgba(255, 255, 255, 0.035);
+
+  --card-bg: rgba(255, 255, 255, 0.02);
+  --card-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.03), 0 18px 50px -28px rgba(0, 0, 0, 0.8);
+}
+
+.light {
+  color-scheme: light;
+
+  --bg-main: #f4f6f8;
+  --bg-secondary: #ffffff;
+  --bg-elevated: #ffffff;
+  --surface: rgba(15, 20, 25, 0.015);
+
+  --text-primary: #0f1419;
+  --text-secondary: #545b64;
+  --text-faint: #636a73;
+  --text-on-accent: #ffffff;
+
+  --border-subtle: rgba(15, 20, 25, 0.10);
+  --border-strong: rgba(15, 20, 25, 0.18);
+
+  --accent: #0b857a;
+  --accent-2: #7c3aed;
+  --accent-3: #c026d3;
+  --accent-soft: rgba(13, 148, 136, 0.10);
+  --accent-glow: rgba(13, 148, 136, 0.18);
+  --accent-2-soft: rgba(124, 58, 237, 0.10);
+  --accent-2-glow: rgba(124, 58, 237, 0.18);
+  --gradient: linear-gradient(110deg, var(--accent) 0%, var(--accent-2) 70%, #c026d3 100%);
+
+  --grid: rgba(15, 20, 25, 0.05);
+
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-sheen: rgba(255, 255, 255, 0.75);
+  --panel-bg: rgba(255, 255, 255, 0.6);
+  --panel-quiet-bg: rgba(255, 255, 255, 0.42);
+
+  --card-bg: rgba(255, 255, 255, 0.6);
+  --card-shadow: 0 1px 2px rgba(15, 20, 25, 0.05), 0 18px 50px -34px rgba(15, 20, 25, 0.25);
+}
+
+* {
+  scroll-behavior: smooth;
+}
+
+html {
+  scroll-padding-top: 88px;
+}
+
+html,
+body {
+  background: var(--bg-main);
+  color: var(--text-primary);
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  overflow-x: hidden;
+  width: 100%;
+}
+
+body {
+  min-height: 100vh;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Fixed dot-grid + vignette — the "instrument" surface */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: -1px -1px;
+  mask-image: radial-gradient(ellipse 130% 125% at 50% 0%, #000 50%, transparent 90%);
+  -webkit-mask-image: radial-gradient(ellipse 130% 125% at 50% 0%, #000 50%, transparent 90%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(60% 50% at 50% 0%, var(--accent-glow), transparent 70%);
+  opacity: 0.22;
+}
+
+/* 404 glitch — two color layers that burst briefly every cycle (teal/violet).
+   Disabled under reduced-motion via the global block below (layers rest at
+   opacity 0, so only the clean gradient "404" shows). */
+.glitch-404 {
+  opacity: 0;
+}
+.glitch-404-a {
+  color: #2dd4bf;
+  animation: glitch404a 6s steps(1) infinite;
+}
+.glitch-404-b {
+  color: #f472b6;
+  animation: glitch404b 6s steps(1) infinite;
+}
+@keyframes glitch404a {
+  0%, 90%, 97%, 100% { opacity: 0; transform: translate(0); }
+  91% { opacity: 0.85; transform: translate(-3px, 1px); clip-path: inset(8% 0 58% 0); }
+  93% { opacity: 0.85; transform: translate(2px, -1px); clip-path: inset(62% 0 18% 0); }
+  95% { opacity: 0.85; transform: translate(-2px, 0); clip-path: inset(34% 0 40% 0); }
+}
+@keyframes glitch404b {
+  0%, 90.5%, 97%, 100% { opacity: 0; transform: translate(0); }
+  92% { opacity: 0.8; transform: translate(3px, -1px); clip-path: inset(20% 0 50% 0); }
+  94% { opacity: 0.8; transform: translate(-2px, 1px); clip-path: inset(55% 0 25% 0); }
+  96% { opacity: 0.8; transform: translate(2px, 0); clip-path: inset(40% 0 35% 0); }
+}
+
+/* World-map marker ping (Contact) */
+.map-ping {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mapPing 2.8s ease-out infinite;
+}
+@keyframes mapPing {
+  0% { transform: scale(0.6); opacity: 0.55; }
+  80%, 100% { transform: scale(2.8); opacity: 0; }
+}
+
+/* Theme switch: crossfade only the dominant color surfaces (NOT a universal
+   `*` transition — that forced a huge style recalc and hitched the switch).
+   This handful of elements is cheap to transition and carries most of the
+   visible color mass, so the flip reads as a smooth morph; text/icons flip
+   under it without drawing attention. */
+body,
+.panel,
+.panel-quiet,
+header > nav,
+input,
+textarea,
+.bg-surface,
+.bg-bg-elevated {
+  transition: background-color 0.45s ease, border-color 0.45s ease;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--text-primary);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-faint);
+  background-clip: padding-box;
+}
+
+/* Smooth theme transitions */
+body,
+.panel,
+.hairline,
+button,
+a,
+input,
+textarea {
+  transition:
+    background-color 240ms ease,
+    border-color 240ms ease,
+    color 240ms ease;
+}
+
+/* ─── Reusable surfaces ─── */
+.panel {
+  position: relative;
+  border: 1px solid var(--border-subtle);
+  background: var(--panel-bg);
+  border-radius: 14px;
+  /* Frosted glass — translucent fill over a blurred backdrop + a top sheen. */
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.3);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.3);
+  box-shadow: inset 0 1px 0 0 var(--glass-sheen);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.panel:hover {
+  border-color: var(--border-strong);
+}
+
+.panel-quiet {
+  border: 1px solid var(--border-subtle);
+  background: var(--panel-quiet-bg);
+  border-radius: 14px;
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.3);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.3);
+}
+
+/* Opt-in hover lift for interactive cards */
+.lift {
+  transition:
+    transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.28s ease,
+    border-color 0.25s ease;
+}
+.lift:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-strong);
+  box-shadow: 0 26px 50px -30px rgba(0, 0, 0, 0.75), 0 0 0 1px var(--accent-soft);
+}
+
+/* Animated accent underline (hero name) */
+.underline-grow {
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: underlineGrow 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
+}
+@keyframes underlineGrow {
+  to { transform: scaleX(1); }
+}
+
+/* Corner ticks — datasheet detail */
+.ticks::before,
+.ticks::after {
+  content: "";
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-color: var(--border-strong);
+  border-style: solid;
+  opacity: 0.7;
+}
+.ticks::before {
+  top: -1px;
+  left: -1px;
+  border-width: 1px 0 0 1px;
+}
+.ticks::after {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 1px 1px 0;
+}
+
+/* Hide scrollbar but keep scroll (used under the GitHub calendar) */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Gradient text (teal → violet → pink) */
+.text-gradient {
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Gradient hairline / divider */
+.gradient-rule {
+  background: linear-gradient(90deg, var(--accent), var(--accent-2), transparent);
+}
+
+/* Animated gradient border wrapper */
+.glow-border {
+  position: relative;
+}
+.glow-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--gradient);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.glow-border:hover::before {
+  opacity: 0.8;
+}
+
+.mono {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+
+.num {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.eyebrow {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* Live status dot */
+.pulse-dot {
+  position: relative;
+}
+.pulse-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  background: var(--accent);
+  opacity: 0.35;
+  animation: pulse 2.4s ease-out infinite;
+}
+@keyframes pulse {
+  0% { transform: scale(0.6); opacity: 0.5; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* ─── Reveal-on-scroll (driven by Reveal.tsx) ─── */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+  filter: blur(6px);
+  transition:
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform, filter;
+}
+[data-reveal="in"] {
+  opacity: 1;
+  transform: none;
+  filter: blur(0);
+}
+
+.hero-shader {
+  transition: opacity 0.3s ease;
+}
+
+/* ─── Ambient drifting aurora (behind content) ─── */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.aurora::before,
+.aurora::after {
+  content: "";
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  will-change: transform;
+  background: radial-gradient(circle at center, var(--accent), transparent 62%);
+}
+.aurora::before {
+  width: 48vw;
+  height: 48vw;
+  left: -8vw;
+  top: -14vh;
+  opacity: 0.24;
+  animation: drift-a 26s ease-in-out infinite alternate;
+}
+.aurora::after {
+  width: 44vw;
+  height: 44vw;
+  right: -8vw;
+  top: 32vh;
+  opacity: 0.22;
+  background: radial-gradient(circle at center, var(--accent-2), transparent 62%);
+  animation: drift-b 34s ease-in-out infinite alternate;
+}
+.light .aurora::before { opacity: 0.12; }
+.light .aurora::after { opacity: 0.1; }
+@keyframes drift-a {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(14vw, 12vh, 0) scale(1.15); }
+}
+@keyframes drift-b {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-12vw, -10vh, 0) scale(1.1); }
+}
+
+/* ─── GitHub heatmap cell pop-in (scale only, preserves level opacity) ─── */
+@keyframes cellIn {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+.heat-cell {
+  animation: cellIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ─── Typewriter caret ─── */
+.type-caret {
+  display: inline-block;
+  width: 0.55ch;
+  margin-left: 1px;
+  color: var(--accent);
+  animation: caretBlink 1.05s steps(1) infinite;
+}
+@keyframes caretBlink {
+  50% { opacity: 0; }
+}
+
+/* ─── Cursor spotlight (ambient, behind content) ─── */
+.cursor-glow {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    240px circle at var(--cx, -300px) var(--cy, -300px),
+    var(--accent-glow),
+    transparent 72%
+  );
+  opacity: 0.55;
+  transition: opacity 0.4s ease;
+}
+@media (hover: none), (prefers-reduced-motion: reduce) {
+  html:not([data-force-motion="true"]) .cursor-glow {
+    display: none;
+  }
+}
+
+@layer base {
+  h1 {
+    @apply font-display text-4xl sm:text-5xl lg:text-6xl font-semibold leading-[1.04] tracking-tight text-text-primary;
+  }
+  h2 {
+    @apply font-display text-2xl sm:text-3xl font-semibold leading-tight tracking-tight text-text-primary;
+  }
+  h3 {
+    @apply font-display text-lg font-semibold tracking-tight text-text-primary;
+  }
+  p {
+    @apply leading-relaxed;
+  }
+}
+
+/* Accessible focus indicator — global fallback. :where() keeps specificity 0,
+   so components with their own focus-visible ring still win (no double ring). */
+:where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Ken Burns slow zoom (About portrait) */
+.ken-burns {
+  animation: kenBurns 20s ease-in-out infinite alternate;
+  transform-origin: 50% 35%;
+  will-change: transform;
+}
+@keyframes kenBurns {
+  from { transform: scale(1); }
+  to { transform: scale(1.09); }
+}
+
+/* ── Portrait instrument frame ─────────────────────────────────────────────
+   Turns the static headshot into a live "sensor readout": a slowly rotating
+   conic-gradient ring, a sweeping scan line, faint CRT scanlines, and HUD
+   corner brackets (the brackets live in JSX). All of it is auto-gated by the
+   reduced-motion block above. */
+@property --pc-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+.portrait-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--pc-angle),
+    var(--accent),
+    var(--accent-2),
+    transparent 55%,
+    var(--accent) 90%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+  animation: pcSpin 6s linear infinite;
+  pointer-events: none;
+}
+.portrait-ring:hover::before {
+  opacity: 0.95;
+}
+@keyframes pcSpin {
+  to { --pc-angle: 360deg; }
+}
+
+/* Vertical scan sweep over the image */
+.portrait-scan {
+  animation: pcScan 5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+@keyframes pcScan {
+  0% { transform: translateY(-60%); opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { transform: translateY(560%); opacity: 0; }
+}
+
+/* Faint CRT scanlines */
+.portrait-lines {
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.05) 0px,
+    rgba(255, 255, 255, 0.05) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* Arcade / CRT mode (Konami easter egg) — scanlines + vignette overlay, only
+   visible when <html data-arcade="true">. */
+.crt {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  background:
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.16) 0 1px, transparent 1px 3px),
+    radial-gradient(120% 120% at 50% 50%, transparent 58%, rgba(0, 0, 0, 0.5) 100%);
+}
+html[data-arcade="true"] .crt {
+  opacity: 1;
+  animation: crtFlicker 3.5s steps(60) infinite;
+  /* Colour-grade via backdrop-filter on the overlay — NOT `filter` on <body>,
+     which would make every position:fixed element size to the whole document. */
+  backdrop-filter: saturate(1.35) contrast(1.08) brightness(1.03);
+  -webkit-backdrop-filter: saturate(1.35) contrast(1.08) brightness(1.03);
+}
+html[data-arcade="true"] .grain {
+  opacity: 0.1;
+}
+@keyframes crtFlicker {
+  0%, 97%, 100% { opacity: 1; }
+  98% { opacity: 0.82; }
+  99% { opacity: 0.94; }
+}
+
+/* Game cover sheen — a light streak that sweeps across on hover */
+@keyframes gameSheen {
+  0% { transform: translateX(-160%) skewX(-16deg); }
+  100% { transform: translateX(260%) skewX(-16deg); }
+}
+
+/* Arcade mode — CRT refresh sweep, power-on flash, CHEAT banner + HUD */
+html[data-arcade="true"] .crt::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 36%;
+  background: linear-gradient(to bottom, transparent, rgba(150, 255, 230, 0.05), transparent);
+  transform: translateY(-100%);
+  animation: crtSweep 5s linear infinite;
+}
+@keyframes crtSweep {
+  to { transform: translateY(285%); }
+}
+
+.arcade-banner {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.arcade-banner::before {
+  /* CRT power-on flash */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  animation: arcadeFlash 0.5s ease-out forwards;
+}
+.arcade-banner[data-state="off"]::before {
+  /* no power-on flash when exiting (was leaving a solid white overlay) */
+  display: none;
+}
+.arcade-banner-card {
+  position: relative;
+  text-align: center;
+  animation: arcadeBannerIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.arcade-banner-title {
+  display: block;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.5rem, 9vw, 6rem);
+  letter-spacing: -0.04em;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: arcadeGlitch 0.4s steps(2) 1;
+}
+.arcade-banner-sub {
+  display: block;
+  margin-top: 0.6rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.32em;
+  color: var(--accent);
+}
+@keyframes arcadeFlash {
+  from { opacity: 0.55; }
+  to { opacity: 0; }
+}
+@keyframes arcadeBannerIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes arcadeGlitch {
+  0% { transform: translateX(-3px); }
+  50% { transform: translateX(3px); }
+  100% { transform: translateX(0); }
+}
+
+.arcade-hud {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 70;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.6rem;
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(4px);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  pointer-events: none;
+}
+.arcade-hud-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: pulse 1.6s ease-out infinite;
+}
+.arcade-hud-hint {
+  color: var(--text-faint);
+}
+
+/* Film grain — static noise overlay for a tactile, premium finish */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 140px 140px;
+}
+
+/* Form controls inherit instrument styling */
+input,
+textarea {
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+
+input[type="text"],
+input[type="email"],
+textarea {
+  background: var(--surface);
+}
+
+/* Reduced motion — OS preference (only while the user hasn't forced motion on) */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-force-motion="true"]) *,
+  html:not([data-force-motion="true"]) *::before,
+  html:not([data-force-motion="true"]) *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  html:not([data-force-motion="true"]) [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}
+
+/* Reduced motion — explicit in-app toggle. Lives OUTSIDE the media query so it
+   takes effect on any machine, not only when the OS also requests reduce. */
+html[data-force-motion="false"] *,
+html[data-force-motion="false"] *::before,
+html[data-force-motion="false"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+html[data-force-motion="false"] [data-reveal] {
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+}
+html[data-force-motion="false"] .cursor-glow {
+  display: none !important;
+}

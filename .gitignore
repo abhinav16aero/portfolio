@@ -1,0 +1,47 @@
+# Node dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+dist/
+
+# Local environment files
+.env
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+.DS_Store
+
+# OS files
+Thumbs.db
+
+# Backup and temporary files
+*.bak
+*.tmp
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Cache
+.cache/
+/.parcel-cache/
+
+# SSH keys and local SSH backups
+.ssh/
+ssh.bak/
+
+# Misc
+dist/
